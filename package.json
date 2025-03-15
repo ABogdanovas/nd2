@@ -1,0 +1,21 @@
+{
+  "name": "firstHomework",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "@hono/zod-openapi": "^0.18.4",
+    "@scalar/hono-api-reference": "^0.5.173",
+    "dotenv": "^16.4.7",
+    "hono": "^4.7.1",
+    "mongodb": "^6.13.0",
+    "snowflake-sdk": "^2.0.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "tsx": "^4.7.1"
+  }
+}
