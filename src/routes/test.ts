@@ -1,13 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { snowFlakeConnection } from "../config/snowflake";
+import fs from "fs";
 
 const getTasks = createRoute({
-  method: "get",
+  method: "post",
   path: "/",
   responses: {
     200: {
       content: {
-        "application/json": {
+        "multipart/form-data": {
           schema: z.any(),
         },
       },
@@ -20,24 +21,27 @@ export const createTestModule = () => {
   const app = new OpenAPIHono();
 
   return app.openapi(getTasks, async (c) => {
-    const statement = snowFlakeConnection.execute({
-      sqlText: "SELECT * FROM ND2.PUBLIC.row_logs",
+    const formData = await c.req.formData();
+    const file = formData.get("file");
+    const arr = await file.arrayBuffer();
+    console.log(arr);
+
+    fs.writeFile("./files/log.txt", Buffer.from(arr), (err) => {
+      if (err) {
+        console.error("Error writing file");
+      } else {
+        console.log("file success");
+      }
     });
 
-    const rows = [];
-
-    // Wrap fetchRows in a Promise
-    await new Promise((resolve, reject) => {
-      statement.fetchRows({
-        numRows: 10, // Use the correct property if available
-        each: (row) => rows.push(row),
-        end: () => resolve(),
-        error: (err) => reject(err),
-      });
+    const statement = await snowFlakeConnection.execute({
+      sqlText: "SELECT * FROM ND2.PUBLIC.raw_logs;",
+      complete: (err, stmt, rows) => {
+        console.log(rows);
+      },
     });
 
-    console.log(rows);
-
-    return c.json({ message: "Hello World" });
+    c.header("Content-Type", "text/plain");
+    return c.body(arr);
   });
 };
