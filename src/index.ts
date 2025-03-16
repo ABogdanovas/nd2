@@ -11,7 +11,7 @@ import { createTestModule } from "./routes/test.js";
 
 const app = new OpenAPIHono();
 
-snowFlakeConnection.connect((error, conn) => {
+snowFlakeConnection.connectAsync((error, conn) => {
   if (error) {
     console.log("Error connecting to snowflake", error);
   } else {

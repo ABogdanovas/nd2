@@ -20,24 +20,20 @@ export const createTestModule = () => {
   const app = new OpenAPIHono();
 
   return app.openapi(getTasks, async (c) => {
-    const statement = snowFlakeConnection.execute({
-      sqlText: "SELECT * FROM ND2.PUBLIC.row_logs",
-    });
+    const rows = await new Promise((resolve, reject) =>
+      snowFlakeConnection.execute({
+        sqlText: `SELECT * FROM ND2.PUBLIC.STRUCTURED_LOGS`,
+        complete: (err, stmt, _rows) => {
+          if (err) {
+            err && console.log("error 1", err);
+            reject(err);
+          }
 
-    const rows = [];
+          resolve(_rows);
+        },
+      })
+    );
 
-    // Wrap fetchRows in a Promise
-    await new Promise((resolve, reject) => {
-      statement.fetchRows({
-        numRows: 10, // Use the correct property if available
-        each: (row) => rows.push(row),
-        end: () => resolve(),
-        error: (err) => reject(err),
-      });
-    });
-
-    console.log(rows);
-
-    return c.json({ message: "Hello World" });
+    return c.json({ message: "Hello World", rows });
   });
 };
