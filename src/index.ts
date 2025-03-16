@@ -27,7 +27,7 @@ app.doc("/api", {
   openapi: "3.1.0",
 });
 
-app.route("/test", createTestModule()).get(
+app.route("/test", createTestModule()).post(
   "/",
   apiReference({
     spec: {

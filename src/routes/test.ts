@@ -1,13 +1,14 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { snowFlakeConnection } from "../config/snowflake";
+import { writeFile } from "fs";
 
 const getTasks = createRoute({
-  method: "get",
+  method: "post",
   path: "/",
   responses: {
     200: {
       content: {
-        "application/json": {
+        "multipart/form-data": {
           schema: z.any(),
         },
       },
@@ -20,6 +21,19 @@ export const createTestModule = () => {
   const app = new OpenAPIHono();
 
   return app.openapi(getTasks, async (c) => {
+    const formData = await c.req.formData();
+    const file = formData.get("file");
+    const arr = await file.arrayBuffer();
+    console.log(arr);
+
+    writeFile("./files/log.txt", Buffer.from(arr), (err) => {
+      if (err) {
+        console.error("Error writing file");
+      } else {
+        console.log("file success");
+      }
+    });
+
     const rows = await new Promise((resolve, reject) =>
       snowFlakeConnection.execute({
         sqlText: `SELECT * FROM ND2.PUBLIC.STRUCTURED_LOGS`,
