@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { snowFlakeConnection } from "../config/snowflake";
-import fs from "fs";
+import { writeFile } from "fs";
 
 const getTasks = createRoute({
   method: "post",
@@ -26,7 +26,7 @@ export const createTestModule = () => {
     const arr = await file.arrayBuffer();
     console.log(arr);
 
-    fs.writeFile("./files/log.txt", Buffer.from(arr), (err) => {
+    writeFile("./files/log.txt", Buffer.from(arr), (err) => {
       if (err) {
         console.error("Error writing file");
       } else {
@@ -34,14 +34,20 @@ export const createTestModule = () => {
       }
     });
 
-    const statement = await snowFlakeConnection.execute({
-      sqlText: "SELECT * FROM ND2.PUBLIC.raw_logs;",
-      complete: (err, stmt, rows) => {
-        console.log(rows);
-      },
-    });
+    const rows = await new Promise((resolve, reject) =>
+      snowFlakeConnection.execute({
+        sqlText: `SELECT * FROM ND2.PUBLIC.STRUCTURED_LOGS`,
+        complete: (err, stmt, _rows) => {
+          if (err) {
+            err && console.log("error 1", err);
+            reject(err);
+          }
 
-    c.header("Content-Type", "text/plain");
-    return c.body(arr);
+          resolve(_rows);
+        },
+      })
+    );
+
+    return c.json({ message: "Hello World", rows });
   });
 };
